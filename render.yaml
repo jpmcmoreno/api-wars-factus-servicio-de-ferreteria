@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: ferreteria-el-tornillo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: DEBUG
+        value: "0"
+      - key: FACTUS_URL
+        value: https://api-sandbox.factus.com.co
+      - key: FACTUS_PAY_URL
+        value: https://pay-api-sandbox.factus.com.co
+      - key: FACTUS_CLIENT_ID
+        sync: false
+      - key: FACTUS_CLIENT_SECRET
+        sync: false
+      - key: FACTUS_USERNAME
+        sync: false
+      - key: FACTUS_PASSWORD
+        sync: false
+      - key: FACTUS_PAY_EMAIL
+        sync: false
+      - key: FACTUS_PAY_PASSWORD
+        sync: false

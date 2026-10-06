@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="es" class="h-full bg-slate-50 text-slate-800">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ferretería El Tornillo · Factus POS</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    main > section { display: none; }
+    main > section.on { display: block; }
+    #qr:not([src]), #qr[src=""] { display: none; }
+    
+    /* Smooth transitions for interactive elements */
+    button, input, select, a {
+      transition: all 0.15s ease-in-out;
+    }
+
+    /* Custom scrollbar for modern subtle look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 99px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 lg:px-8 py-3 transition-all shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      
+      <!-- Brand Logo & Dian Status Badge -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/15 text-white font-bold text-xl">
+          🔧
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold tracking-tight text-slate-900">Ferretería El Tornillo</h1>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Factus DIAN Sync
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Facturación Electrónica POS & Sistema de Control</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+        <button data-s="tienda" class="on flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 [&.on]:bg-white [&.on]:text-blue-600 [&.on]:shadow-sm [&.on]:border [&.on]:border-slate-200">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i> Vender
+        </button>
+        <button data-s="surtir" class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 [&.on]:bg-white [&.on]:text-blue-600 [&.on]:shadow-sm [&.on]:border [&.on]:border-slate-200">
+          <i data-lucide="package-plus" class="w-4 h-4"></i> Surtir
+        </button>
+        <button data-s="dash" class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 [&.on]:bg-white [&.on]:text-blue-600 [&.on]:shadow-sm [&.on]:border [&.on]:border-slate-200">
+          <i data-lucide="line-chart" class="w-4 h-4"></i> Dashboard
+        </button>
+      </nav>
+
+      <!-- System Control Actions -->
+      <div class="flex items-center gap-2">
+        <button onclick="reiniciar()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100/80 text-red-600 text-xs font-semibold transition-colors">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reiniciar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8">
+    
+    <!-- ============ TIENDA (ingresos) ============ -->
+    <section id="tienda" class="on space-y-6">
+      <div class="ventas grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Catalog Container -->
+        <div class="lg:col-span-7 xl:col-span-8 space-y-4">
+          <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div>
+              <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="store" class="w-4 h-4 text-blue-600"></i> Catálogo de Productos
+              </h2>
+              <p class="text-xs text-slate-500">Selecciona o busca items para cargar a la venta actual</p>
+            </div>
+            <span class="text-xs font-medium px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full border border-slate-200">Facturación POS</span>
+          </div>
+
+          <!-- Product Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="catalogo"></div>
+        </div>
+
+        <!-- Sticky Cash Register Order Sidebar -->
+        <div class="lg:col-span-5 xl:col-span-4">
+          <div class="carro sticky top-20 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-blue-600"></i> Resumen de Cuenta
+              </h3>
+              <span class="text-[11px] bg-blue-50 text-blue-700 font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">DIAN Ready</span>
+            </div>
+
+            <!-- Customer Billing Fields -->
+            <div class="space-y-2.5">
+              <div class="relative">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                <input id="cliente" placeholder="Nombre o Razón Social del cliente" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium">
+              </div>
+              
+              <div class="grid grid-cols-2 gap-2">
+                <div class="relative">
+                  <i data-lucide="id-card" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                  <input id="cedula" placeholder="Cédula / NIT" inputmode="numeric" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium">
+                </div>
+                <div class="relative">
+                  <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                  <input id="email" type="email" placeholder="Email (opcional)" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium">
+                </div>
+              </div>
+            </div>
+
+            <!-- Cart Line Items List -->
+            <div class="border-t border-b border-slate-100 py-3 my-1 max-h-56 overflow-y-auto space-y-2 text-xs" id="lineas"></div>
+
+            <!-- Total Box -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 flex items-center justify-between">
+              <div>
+                <span class="text-[11px] uppercase tracking-wider font-bold text-slate-400 block">Total Venta</span>
+                <span class="text-[10px] text-slate-500 font-medium">(Incluye IVA 19%)</span>
+              </div>
+              <div class="text-2xl font-black text-slate-900 tracking-tight" id="totalV">COP $0</div>
+            </div>
+
+            <!-- Action Button -->
+            <button class="b w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all disabled:opacity-40 disabled:hover:bg-blue-600 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm" id="btnV" onclick="vender()">
+              <i data-lucide="receipt" class="w-4 h-4"></i> Facturar venta
+            </button>
+            
+            <!-- Output and QR Response Display -->
+            <div id="outV" hidden class="bg-slate-900 text-slate-100 rounded-xl p-3 text-xs font-mono space-y-2"></div>
+            <div class="flex justify-center">
+              <img id="qr" class="max-w-[180px] rounded-xl border border-slate-200 shadow-sm my-2" alt="">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SURTIR (gastos) ============ -->
+    <section id="surtir" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Purchase Form -->
+        <form class="card lg:col-span-5 xl:col-span-4 bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm" id="fc">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i> Comprar a Proveedor
+            </h3>
+            <p class="mut text-xs text-slate-500">Genera un documento soporte electrónico en Factus</p>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="mut block mb-1 font-semibold text-slate-700">Producto a reponer</label>
+              <select id="selP" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 font-medium"></select>
+            </div>
+
+            <div>
+              <label class="mut block mb-1 font-semibold text-slate-700">Cantidad</label>
+              <select id="cantC" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 font-medium"></select>
+            </div>
+
+            <div>
+              <label class="mut block mb-1 font-semibold text-slate-700">Proveedor</label>
+              <select id="selProv" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 font-medium"></select>
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50/80 rounded-xl border border-amber-200/60">
+            <p class="mut text-xs text-amber-800 font-semibold" id="resumenC"></p>
+          </div>
+
+          <button class="b w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-xs">
+            <i data-lucide="arrow-down-right" class="w-4 h-4 text-emerald-400"></i> Comprar y registrar gasto
+          </button>
+        </form>
+
+        <!-- Current Stock Inventory Table -->
+        <div class="card lg:col-span-7 xl:col-span-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="boxes" class="w-4 h-4 text-blue-600"></i> Control de Inventario
+              </h3>
+              <p class="text-xs text-slate-500">Existencias actuales y costos de reposición registrados</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table id="inv" class="w-full text-left border-collapse text-xs"></table>
+          </div>
+          <pre id="outC" hidden class="mt-4 p-3 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono"></pre>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section id="dash" class="space-y-6">
+      
+      <!-- Top KPIs Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpis"></div>
+
+      <!-- Financial Statements and Chart -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Income Statement Table -->
+        <div class="card lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-600"></i> Estado de Resultados
+          </h3>
+          <div class="overflow-x-auto">
+            <table id="er" class="w-full text-left border-collapse text-xs"></table>
+          </div>
+        </div>
+
+        <!-- Chart Display -->
+        <div class="card lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2 mb-4">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i> Métrica Financiera Visual
+          </h3>
+          <div class="relative w-full h-[260px] flex items-center justify-center">
+            <canvas id="graf" class="max-w-full max-h-full"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Electronic Documents Log -->
+      <div class="card bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+          <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i> Histórico de Documentos en Factus
+        </h3>
+        <div class="overflow-x-auto">
+          <table id="docs" class="w-full text-left border-collapse text-xs"></table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- JavaScript Business Logic -->
+  <script>
+    const $ = id => document.getElementById(id), cop = n => (Math.round(n) < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("es-CO");
+    const api = (u, body) => fetch(u, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {})
+      .then(async r => ({ok: r.ok, j: await r.json()}));
+    let prods = [], todos = [], chart;
+    const img = f => `https://upload.wikimedia.org/wikipedia/commons/thumb/${f}/330px-${f.split("/")[2]}`;  // fotos de Wikimedia Commons
+    const CATALOGO = [ // nombre, costo, precio venta (sin IVA), imagen, emoji de respaldo
+      ["Martillo de uña 16oz", 18000, 32000, img("8/84/Claw-hammer.jpg"), "🔨"],
+      ["Juego destornilladores x6", 22000, 39000, img("9/9b/2023_Wkr%C4%99tak_z_bitami.jpg"), "🪛"],
+      ["Cinta métrica 5m", 9000, 17000, img("1/17/Measuring-tape.jpg"), "📏"],
+      ["Caja tornillos x100", 7000, 13000, img("8/80/4_SPAX_screws_with_partial_and_full_thread.jpg"), "🔩"],
+      ["Taladro percutor 500W", 145000, 229000, img("5/5c/Cordless_Drill_-_unbranded.jpg"), "🛠️"],
+      ["Brocha 3 pulgadas", 4500, 9000, img("3/30/Brocha.png"), "🖌️"],
+      ["Galón pintura blanca", 38000, 62000, img("4/49/Nippon_Paint_Tin.jpg"), "🪣"],
+      ["Llave inglesa 10\"", 21000, 36000, img("9/98/Chrome_Vanadium_Adjustable_Wrench.jpg"), "🔧"],
+      ["Alicate universal", 15000, 27000, img("8/8f/2023_Kombinerki_%281%29.jpg"), "🗜️"],
+      ["Bombillo LED 9W", 3500, 7500, img("e/e1/Led-lampa.jpg"), "💡"]];
+    const IMG = Object.fromEntries(CATALOGO.map(c => [c[0], c[3]]));
+    const carrito = {};   // {id: cantidad}
+    const PROVEEDORES = [["Ferretería Mayorista Andina SAS", "900123456"], ["Herramientas El Constructor SAS", "901234567"],
+      ["Distribuidora Eléctrica Bogotá SAS", "860012345"]];
+    const opts = (l, f) => l.map((x, i) => `<option value=${i}>${f(x)}</option>`).join("");
+    
+    $("selProv").innerHTML = opts(PROVEEDORES, p => `${p[0]} · NIT ${p[1]}`);
+    $("cantC").innerHTML = [5, 10, 20, 50].map(n => `<option>${n}</option>`).join("");
+    $("selP").innerHTML = opts(CATALOGO, c => `${c[0]} · costo ${cop(c[1])}`);
+    
+    const resumen = () => { 
+      const [n, c] = CATALOGO[$("selP").value], q = $("cantC").value;
+      $("resumenC").textContent = `Total compra estimada: ${cop(q * c * 1.19)} (${q} × ${cop(c)} + IVA 19%)`; 
+    };
+    $("selP").onchange = $("cantC").onchange = resumen; resumen();
+    const err = j => "❌ " + (j.message || "") + "\n" + JSON.stringify(j.data?.errors || j, null, 2);
+
+    document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+      document.querySelectorAll("nav button, section").forEach(e => e.classList.remove("on"));
+      b.classList.add("on"); $(b.dataset.s).classList.add("on");
+      b.dataset.s == "dash" ? dashboard() : cargar();
+    });
+
+    async function cargar() {
+      prods = (await api("/api/productos")).j || [];
+      todos = [...prods, ...CATALOGO.filter(c => !prods.some(p => p.nombre == c[0]))
+                       .map(([nombre, costo, precio]) => ({id: "", nombre, costo, precio, stock: 0}))];
+      pintar();
+      $("inv").innerHTML = `
+        <thead>
+          <tr class="border-b border-slate-200 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+            <th class="pb-3 pt-1">Producto</th>
+            <th class="pb-3 pt-1 text-right">Costo unitario</th>
+            <th class="pb-3 pt-1 text-right">Stock disponible</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          ` + prods.map(p => `
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="py-3 font-semibold text-slate-800">${p.nombre}</td>
+              <td class="py-3 text-right font-mono font-medium text-slate-600">${cop(p.costo)}</td>
+              <td class="py-3 text-right">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${p.stock > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}">
+                  ${p.stock} unidades
+                </span>
+              </td>
+            </tr>`).join("")
+          + `
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="pt-4 text-[11px] text-slate-400 italic">Valores calculados sin IVA del 19%</td>
+          </tr>
+        </tfoot>`;
+      
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function pintar() {
+      $("catalogo").innerHTML = todos.map(p => { 
+        const c = CATALOGO.find(x => x[0] == p.nombre) || [], libre = p.stock - (carrito[p.id] || 0);
+        return `
+          <div class="card prod bg-white border border-slate-200 rounded-2xl p-4 hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between group">
+            <div>
+              <div class="relative overflow-hidden rounded-xl bg-slate-50 border border-slate-100 mb-3 flex items-center justify-center h-32">
+                ${IMG[p.nombre] 
+                  ? `<img src="${IMG[p.nombre]}" alt="${p.nombre}" onerror="this.outerHTML='<div class=\'emo text-5xl\'>${c[4] || "📦"}</div>'" class="object-contain h-28 w-full p-2 group-hover:scale-105 transition-transform duration-300">` 
+                  : `<div class="emo text-5xl select-none">${c[4] || "📦"}</div>`}
+                <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold border ${p.stock > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'}">
+                  ${p.stock ? `Stock: ${p.stock}` : "Agotado"}
+                </span>
+              </div>
+
+              <h3 class="font-bold text-slate-900 text-xs sm:text-sm mb-1 line-clamp-1">${p.nombre}</h3>
+              <div class="flex items-baseline gap-1.5 mb-0.5">
+                <span class="text-base font-extrabold text-blue-600">${cop(p.precio * 1.19)}</span>
+                <span class="text-[10px] font-semibold text-slate-400">con IVA</span>
+              </div>
+              <div class="mut text-[11px] text-slate-500 mb-3">${cop(p.precio)} + IVA</div>
+            </div>
+
+            <div class="row flex items-center gap-2 pt-2 border-t border-slate-100">
+              <select id="q${p.id}" class="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg p-1.5 focus:outline-none focus:border-blue-500 font-medium">
+                ${[...Array(Math.max(Math.min(libre, 10), 1)).keys()].map(i => `<option>${i + 1}</option>`).join("")}
+              </select>
+              <button class="b flex-1 py-1.5 px-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-100 disabled:text-slate-400 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed shadow-sm" ${libre > 0 ? "" : "disabled"} onclick="agregar('${p.id}')">
+                ${p.stock ? "Agregar" : "Agotado"}
+              </button>
+            </div>
+          </div>`; 
+      }).join("");
+
+      const ls = Object.entries(carrito).map(([id, q]) => [prods.find(p => p.id == id), q]);
+      
+      $("lineas").innerHTML = ls.map(([p, q]) => `
+        <div class="linea flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-blue-600 bg-blue-100/80 px-1.5 py-0.5 rounded-md text-[11px]">${q}x</span>
+            <span class="text-slate-800 font-semibold">${p.nombre}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-slate-900">${cop(p.precio * q * 1.19)}</span>
+            <button onclick="quitar('${p.id}')" class="text-slate-400 hover:text-red-600 p-1 font-bold transition-colors">✕</button>
+          </div>
+        </div>`).join("")
+        || "<p class='mut text-center text-slate-400 py-6 italic text-xs'>El carrito se encuentra vacío</p>";
+
+      const t = ls.reduce((s, [p, q]) => s + p.precio * q, 0);
+      $("totalV").textContent = t ? cop(t * 1.19) : "COP $0"; 
+      $("btnV").disabled = !t;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function agregar(id) { carrito[id] = (carrito[id] || 0) + +$("q" + id).value; pintar(); }
+    function quitar(id) { delete carrito[id]; pintar(); }
+    const lineas = () => Object.entries(carrito).map(([id, cantidad]) => ({id, cantidad}));
+
+    async function vender() {
+      $("outV").hidden = false; $("qr").src = "";
+      if (!$("cliente").value.trim() || !$("cedula").value.trim()) {
+        $("outV").innerHTML = "<div class='text-amber-300 font-sans flex items-center gap-2 p-1'><i data-lucide='alert-circle' class='w-4 h-4'></i> Escribe el nombre y cédula del cliente</div>";
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      $("btnV").disabled = true; 
+      $("outV").innerHTML = "<div class='text-blue-300 font-sans animate-pulse flex items-center gap-2 p-1'><i data-lucide='loader-2' class='w-4 h-4 animate-spin'></i> Emitiendo factura electrónica en Factus...</div>";
+      if (window.lucide) lucide.createIcons();
+
+      const {ok, j} = await api("/api/vender", {
+        items: lineas(), 
+        cliente: $("cliente").value.trim(),
+        cedula: $("cedula").value.replace(/\D/g, ""), 
+        email: $("email").value.trim()
+      });
+      
+      const d = j.data || {};
+      $("outV").innerHTML = ok ? `
+        <div class="space-y-1.5 font-sans p-1">
+          <div class="text-emerald-400 font-bold flex items-center gap-1.5">
+            <i data-lucide='check-circle-2' class='w-4 h-4'></i> Factura #${d.number} emitida correctamente
+          </div>
+          <div class="text-slate-300 text-[11px]">Total: <strong class="text-white">${cop(d.totals?.total || 0)}</strong></div>
+          <div class="text-[10px] break-all text-slate-400 font-mono">CUFE: ${d.cufe}</div>
+          <div class="text-slate-300 text-[11px]">Cobro: ${j.pago?.data?.status || "sin cobro (monto < $10.000)"}</div>
+          <div class="pt-1">
+            <a href="/pdf/venta/${d.number}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-500 transition-colors text-xs">
+              <i data-lucide='file-text' class='w-3.5 h-3.5'></i> Descargar PDF Oficial
+            </a>
+          </div>
+        </div>
+      ` : err(j);
+
+      if (!ok) $("outV").textContent = err(j);
+      if (j.pago?.data?.qr) $("qr").src = j.pago.data.qr;
+      if (ok) { ["cliente", "cedula", "email"].forEach(i => $(i).value = ""); Object.keys(carrito).forEach(k => delete carrito[k]); }
+      cargar();
+    }
+
+    $("fc").onsubmit = async e => {
+      e.preventDefault(); const b = e.target.querySelector("button"); b.disabled = true;
+      $("outC").hidden = false; 
+      $("outC").innerHTML = "<div class='text-blue-300 font-sans animate-pulse flex items-center gap-2 p-1'><i data-lucide='loader-2' class='w-4 h-4 animate-spin'></i> Registrando documento soporte en Factus...</div>";
+      if (window.lucide) lucide.createIcons();
+
+      const [nombre, costo, precio] = CATALOGO[$("selP").value], [proveedor, nit] = PROVEEDORES[$("selProv").value];
+      const {ok, j} = await api("/api/comprar", {
+        id: prods.find(p => p.nombre == nombre)?.id, 
+        nombre, costo, precio, cantidad: $("cantC").value, proveedor, nit
+      });
+
+      if (ok) {
+        $("outC").innerHTML = `
+          <div class="space-y-1.5 font-sans p-1">
+            <div class="text-emerald-400 font-bold flex items-center gap-1.5">
+              <i data-lucide='check-circle-2' class='w-4 h-4'></i> Documento Soporte #${j.data?.number} registrado
+            </div>
+            <div>
+              <a href="/pdf/compra/${j.data?.number}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-500 transition-colors text-xs">
+                <i data-lucide='file-text' class='w-3.5 h-3.5'></i> Ver PDF Soporte
+              </a>
+            </div>
+          </div>`;
+      } else {
+        $("outC").textContent = err(j);
+      }
+      
+      b.disabled = false; cargar();
+    };
+
+    async function dashboard() {
+      $("kpis").innerHTML = "<p class='mut col-span-full text-center text-slate-500 py-8 animate-pulse font-medium text-xs'>Consultando métricas financieras en Factus...</p>";
+      const d = (await api("/api/dashboard")).j;
+      
+      const k = (t, v, icon, border, bgIcon, text, sub = "") => `
+        <div class="card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">${t}</span>
+            <div class="p-2 rounded-xl ${bgIcon}">
+              <i data-lucide="${icon}" class="w-4 h-4 ${text}"></i>
+            </div>
+          </div>
+          <div class="big text-2xl font-black ${text} tracking-tight">${cop(v)}</div>
+          <div class="mut text-[11px] text-slate-500 font-medium">${sub}</div>
+        </div>`;
+
+      $("kpis").innerHTML = 
+        k("Ingreso Bruto", d.ingreso_bruto, "trending-up", "border-emerald-200", "bg-emerald-50", "text-emerald-600", "Ventas brutas sin IVA") + 
+        k("Gasto Bruto", d.gasto_bruto, "trending-down", "border-red-200", "bg-red-50", "text-red-600", "Compras de insumos sin IVA") + 
+        k("Impuestos Est.", d.impuestos_total, "receipt", "border-amber-200", "bg-amber-50", "text-amber-600", "IVA neto + renta estimada") + 
+        k("Utilidad Neta", d.utilidad_neta, "wallet", d.utilidad_neta >= 0 ? "border-blue-200" : "border-red-200", d.utilidad_neta >= 0 ? "bg-blue-50" : "bg-red-50", d.utilidad_neta >= 0 ? "text-blue-600" : "text-red-600", "Después de impuestos");
+
+      const f = (t, v, c = "", b = false) => `
+        <tr class="${b ? "font-bold bg-slate-50/80" : "hover:bg-slate-50/50"} transition-colors border-b border-slate-100">
+          <td class="py-2.5 px-3 text-slate-700">${t}</td>
+          <td class="py-2.5 px-3 text-right font-mono ${c}">${cop(v)}</td>
+        </tr>`;
+
+      $("er").innerHTML = 
+        f("Ingreso bruto (ventas)", d.ingreso_bruto, "text-emerald-600 font-semibold") + 
+        f("− Gasto bruto (compras)", -d.gasto_bruto, "text-red-600 font-semibold") + 
+        f("= Utilidad antes de impuestos", d.utilidad_bruta, "text-slate-900", true) + 
+        f(`− Impuesto de renta estimado (${d.tasa_renta * 100}%)`, -d.renta, "text-amber-600 font-semibold") + 
+        f("= Utilidad después de impuestos", d.utilidad_neta, d.utilidad_neta >= 0 ? "text-emerald-600 font-bold" : "text-red-600 font-bold", true) + 
+        `<tr><td colspan="2" class="pt-4 pb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Control de IVA DIAN</td></tr>` + 
+        f("IVA generado (cobrado en ventas)", d.iva_generado, "text-amber-600") + 
+        f("− IVA descontable (pagado en compras)", -d.iva_descontable, "text-slate-500") + 
+        f("= IVA a pagar a la DIAN", d.iva_a_pagar, "text-amber-600 font-bold", true);
+
+      chart?.destroy();
+      chart = new Chart($("graf"), {
+        type: "bar",
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${cop(ctx.raw)}`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: "#f1f5f9" }, ticks: { color: "#64748b", font: { size: 11 } } },
+            y: { grid: { color: "#f1f5f9" }, ticks: { color: "#64748b", font: { size: 11 } } }
+          }
+        },
+        data: {
+          labels: ["Ingresos", "Gastos", "IVA Neto", "Renta", "Utilidad"],
+          datasets: [{
+            data: [d.ingreso_bruto, d.gasto_bruto, d.iva_a_pagar, d.renta, d.utilidad_neta],
+            backgroundColor: ["#10b981", "#ef4444", "#f59e0b", "#d97706", "#2563eb"],
+            borderRadius: 8
+          }]
+        }
+      });
+
+      $("docs").innerHTML = `
+        <thead>
+          <tr class="border-b border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+            <th class="pb-3 pt-1">Fecha</th>
+            <th class="pb-3 pt-1">Tipo</th>
+            <th class="pb-3 pt-1">Número</th>
+            <th class="pb-3 pt-1">Producto</th>
+            <th class="pb-3 pt-1 text-right">Base</th>
+            <th class="pb-3 pt-1 text-right">IVA</th>
+            <th class="pb-3 pt-1 text-right">Total</th>
+            <th class="pb-3 pt-1 text-center">Fuente</th>
+            <th class="pb-3 pt-1 text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          ` + d.docs.slice().reverse().map(x => `
+            <tr class="hover:bg-slate-50/80 transition-colors text-xs">
+              <td class="py-3 text-slate-500 font-medium">${x.fecha}</td>
+              <td class="py-3">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${x.tipo == "venta" ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}">
+                  ${x.tipo == "venta" ? "🟢 Venta" : "🔴 Compra"}
+                </span>
+              </td>
+              <td class="py-3 font-mono font-bold text-slate-800">${x.number}</td>
+              <td class="py-3 text-slate-700 font-medium">${x.producto}</td>
+              <td class="py-3 text-right font-mono text-slate-600">${cop(x.gross)}</td>
+              <td class="py-3 text-right font-mono text-amber-600 font-medium">${cop(x.tax)}</td>
+              <td class="py-3 text-right font-mono font-bold text-slate-900">${cop(x.total)}</td>
+              <td class="py-3 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-bold border border-slate-200 uppercase">${x.fuente || "local"}</span>
+              </td>
+              <td class="py-3 text-center">
+                <a href="/pdf/${x.tipo}/${x.number}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 font-semibold transition-colors text-xs">
+                  <i data-lucide='file-text' class='w-3 h-3'></i> PDF
+                </a>
+              </td>
+            </tr>`).join("") + `
+        </tbody>`;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function reiniciar() {
+      if (!confirm("¿Reiniciar la tienda? Se borrará el inventario y los documentos de la app (en Factus seguirán existiendo).")) return;
+      await api("/api/reiniciar", {}); 
+      Object.keys(carrito).forEach(k => delete carrito[k]); 
+      $("outV").hidden = $("outC").hidden = true; 
+      $("qr").src = "";
+      document.querySelector("nav button").click();
+    }
+
+    // Initial Load Execution
+    window.onload = function() {
+      cargar();
+      if (window.lucide) lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
